@@ -54,7 +54,7 @@
     >>> bottle.run(app=app, port=8081)
 
 
-*Registered endpoints*
+*Registered endpoints*::
 
     - POST /oauth - d {"username": <username>, "password": <password>}.
         *Returns a JSON object*: {"token": <auth_token>}
