@@ -1,0 +1,7 @@
+bottle
+six
+PyJWT
+pytest
+coverage
+coveralls
+pytest-cov
