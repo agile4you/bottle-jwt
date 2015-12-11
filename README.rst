@@ -32,11 +32,9 @@
     server_secret = '@#$!@&^%&@^$&'
 
     #  create a sample app
-
     app = bottle.Bottle()
 
     #  create the auth_provider
-
     provider = JWTProviderPlugin(
         'jwt_auth',
         auth_endpoint='/oauth',
@@ -48,7 +46,7 @@
     # install plugin
     app.install(provider)
 
-    # decorated views.
+    # Use the plugin decorator.
 
     @app.get('/')
     @jwt_auth_required
