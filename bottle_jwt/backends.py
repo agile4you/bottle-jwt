@@ -9,8 +9,9 @@ from __future__ import print_function
 
 import abc
 import json
-import requests
 import six
+
+__all__ = ['BaseBackend', 'FileSystemBackend']
 
 
 class BackendError(Exception):
@@ -24,7 +25,30 @@ class BaseBackend(object):
     """
 
     @abc.abstractmethod
-    def get_user(self, user_uid, user_secret):  # pragma: no cover
+    def authenticate_user(self, user_uid, user_secret):  # pragma: no cover
+        """User authentication method. All subclasses must implement the
+        `authenticate_user` method with the following specs.
+
+        Args:
+            user_uid (str): User identity for the backend (email/username).
+            user_secret: User secret (password) for backend.
+
+        Returns:
+            User id if authentication is succesful or None
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_user(self, user_uid):  # pragma: no cover
+        """User data retrieval method. All subclasses must implement the
+        `get_user` method with the following specs.
+
+        Args:
+            user_uid (str): User identity in backend.
+
+        Returns:
+            User data (dict) if user exists or None.
+        """
         pass
 
 
@@ -61,8 +85,8 @@ class FileSystemBackend(BaseBackend):
                 raise BackendError(e.args)
         return self._data
 
-    def get_user(self, user_uid, user_secret):
-        """Implement `BaseBackend.get_user` method.
+    def authenticate_user(self, user_uid, user_secret):
+        """Implement `BaseBackend.authenticate_user` method.
         """
 
         try:
@@ -73,44 +97,10 @@ class FileSystemBackend(BaseBackend):
         except IndexError:
             return None
 
-
-class ExternalAPIBackend(BaseBackend):  # pragma: no cover
-    """Use another authentication web service as a backend provider for
-    JWT Authentication. The external API must at least uses password
-    authentication scheme.
-
-    # TODO (vapapvasil@gmail.com) Work with Google, Facebook, Twitter Oauth
-    protocols.
-
-    Attributes:
-        auth_service (str): The Full endpoint to the external auth service.
-        method (str): The HTTP method name.
-    """
-
-    def __init__(self, srv_host, srv_port, srv_uri, method='POST',
-                 ssh=True):
-        """
-        """
-        self.auth_service = '{}:://{}:{}/{}'.format(
-            'https' if ssh else 'http',
-            srv_host,
-            srv_port,
-            srv_uri
-        )
-
-        self.method = method.lower()
-
-    def get_user(self, user_uid, user_secret, **extras):
+    def get_user(self, user_uid):
         """Implement `BaseBackend.get_user` method.
         """
-
-        auth_proxy = getattr(self.http_engine, self.method)
-
-        try:
-            user_data = auth_proxy(self.uri)
-
-        except (requests.ConnectionError, requests.HTTPError) as e:
-
-            raise BackendError("ExternalAuthServiceError: {}".format(e.args))
-
-        return user_data or None
+        user = [user for user in self.data if user['user_id'] == user_uid]
+        if user:
+            return user.pop()
+        return None

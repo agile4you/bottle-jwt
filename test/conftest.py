@@ -36,9 +36,15 @@ def backend():
     class MockBackend(object):
         def __init__(self, data):
             self._repo = data
-        def get_user(self, user_uid, user_secret):
+
+        def authenticate_user(self, user_uid, user_secret):
             if self._repo.get(user_uid) == user_secret:
-                return {"user": user_uid}
+                return user_uid
+            return None
+
+        def get_user(self, user_uid):
+            if user_uid in self._repo:
+                return True
             return None
 
     return MockBackend

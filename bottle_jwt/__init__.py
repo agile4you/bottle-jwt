@@ -27,4 +27,5 @@ __all__ = ['JWTProviderPlugin', 'JWTProvider', 'JWTProviderError',
            'BaseBackend', 'BackendError', 'FileSystemBackend']
 
 from .backends import (BaseBackend, FileSystemBackend, BackendError)
-from .auth import (JWTProviderError, JWTProvider, JWTProviderPlugin)
+from .auth import (JWTProviderError, JWTProvider, JWTProviderPlugin,
+                   jwt_auth_required)

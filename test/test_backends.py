@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import pytest
 import os
-from  bottle_jwt.backends import (FileSystemBackend, BackendError)
+from bottle_jwt.backends import (FileSystemBackend, BackendError)
 
 
 @pytest.fixture(scope='module')
@@ -39,15 +39,16 @@ def test_filesystembackend_lazy_load_fail(file_backend):
         assert backend_cls('/sds').data
 
 
-def test_filesystembackend_get_user_hit(file_backend):
-    """Test `bottle_jwt.backends.FilesystemBackend.get_user` method.
+def test_filesystembackend_authenticate_user_hit(file_backend):
+    """Test `bottle_jwt.backends.FilesystemBackend.authenticate_user` method.
     """
 
-    assert file_backend.get_user('pav', '123')
+    assert file_backend.authenticate_user('pav', '123')
 
 
 def test_filesystembackend_get_user_not_found(file_backend):
-    """Test `bottle_jwt.backends.FilesystemBackend.get_user` method not found.
+    """Test `bottle_jwt.backends.FilesystemBackend.authenticate_user` method
+    fail.
     """
 
-    assert not file_backend.get_user('pav', '12')
+    assert not file_backend.authenticate_user('pav', '12')

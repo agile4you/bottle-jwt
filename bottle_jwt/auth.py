@@ -46,7 +46,7 @@ class JWTProvider(object):
     """JWT Auth provider concrete class.
     """
 
-    def __init__(self, fields, backend, secret, algorithm='HS256', ttl=60):
+    def __init__(self, fields, backend, secret, algorithm='HS256', ttl=None):
         self.user_field = auth_fields(*fields)
         self.secret = secret
         self.backend = backend
@@ -61,16 +61,18 @@ class JWTProvider(object):
             seconds=self.ttl
         )
 
-    def create_token(self, payload):
+    def create_token(self, user):
         """Creates a new signed JWT-valid token.
 
         Args:
-            payload (dict): The payload key value data.
+            user (str): The user id from self.backend.
 
         Returns:
             A valid JWT with expiration signature
         """
-        if 'exp' not in payload:
+        payload = {self.user_field.user_id: user.encode('base64')}
+
+        if self.ttl:
             payload['exp'] = self.expires
 
         logger.debug("Token created for payload: {}".format(str(payload)))
@@ -91,21 +93,26 @@ class JWTProvider(object):
         """
         try:
             decoded = jwt.decode(
-                token.split(" ")[1],
+                token.split(" ", 1).pop(),
                 self.secret,
                 algorithms=self.algorithm
             )
 
             logger.debug("Token validation passed: {}".format(token))
-            return decoded
+
+            user_uid = decoded.get(self.user_field.user_id)
+
+            if not user_uid:
+                raise JWTProviderError('Invalid User token')
+
+            if self.backend.get_user(user_uid.decode('base64')):
+                return decoded
+
+            raise JWTProviderError('Invalid User token')
 
         except (jwt.DecodeError, jwt.ExpiredSignatureError) as e:
             logger.debug("{}: {}".format(e.args[0], token))
-            raise JWTProviderError(e.args)
-
-        except IndexError:
-            logger.debug("Invalid or no token found on request.")
-            raise JWTProviderError("Invalid or no token found on request.")
+            raise JWTProviderError("Invalid auth token provided.")
 
     def authenticate(self, request):
         """Returns a valid JWT for provided credentials.
@@ -127,7 +134,7 @@ class JWTProvider(object):
             user_uid = request.forms.get(self.user_field.user_id)
             user_secret = request.forms.get(self.user_field.password)
 
-        user = self.backend.get_user(user_uid, user_secret)
+        user = self.backend.authenticate_user(user_uid, user_secret)
 
         if user:
             return self.create_token(user)
@@ -161,11 +168,12 @@ class JWTProviderPlugin(object):
         auth_endpoint (str): The authentication uri for provider.
         kwargs : JWTProvider init parameters.
     """
-
+    scope = ('plugin', 'middleware')
     api = 2
 
-    def __init__(self, keyword, auth_endpoint, **kwargs):
+    def __init__(self, keyword, auth_endpoint, scope='plugin', **kwargs):
         self.keyword = keyword
+        self.scope = scope
         self.provider = JWTProvider(**kwargs)
         self.auth_endpoint = auth_endpoint
 
@@ -180,7 +188,7 @@ class JWTProviderPlugin(object):
                 token = self.provider.authenticate(bottle.request)
                 return {"token": token.decode("utf-8")}
             except JWTProviderError as e:
-                return {"AuthenticationError", e.args}
+                return {"AuthenticationError": list(e.args)}
 
         for other in app.plugins:
             if not isinstance(other, JWTProviderPlugin):
@@ -191,15 +199,21 @@ class JWTProviderPlugin(object):
                                          "non-unique keyword).")
 
     def apply(self, callback, context):  # pragma: no cover
-        if not hasattr(callback, 'auth_required'):
-            return callback
-
-        logger.debug("JWT Authentication: {}".format(context.rule))
-
+        """Implement bottle.py API version 2 `apply` method.
+        """
         def wrapper(*args, **kwargs):
             try:
                 self.provider.authorize(bottle.request)
                 return callback(*args, **kwargs)
             except JWTProviderError as e:
                 bottle.abort(401, e.args)
+
+        if self.scope == 'middleware':
+            logger.debug("JWT Authentication: {}".format(context.rule))
+            return wrapper
+
+        if not hasattr(callback, 'auth_required'):
+            return callback
+
+        logger.debug("JWT Authentication: {}".format(context.rule))
         return wrapper
