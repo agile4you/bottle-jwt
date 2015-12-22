@@ -6,6 +6,7 @@ Main auth providers class implementation.
 
 from __future__ import unicode_literals
 from __future__ import print_function
+import base64
 import bottle
 import collections
 import jwt
@@ -70,7 +71,9 @@ class JWTProvider(object):
         Returns:
             A valid JWT with expiration signature
         """
-        payload = {self.user_field.user_id: user.encode('base64')}
+        payload = {self.user_field.user_id: base64.b64encode(
+            bytes(user, 'utf8')
+        ).decode("utf-8")}
 
         if self.ttl:
             payload['exp'] = self.expires
@@ -105,7 +108,9 @@ class JWTProvider(object):
             if not user_uid:
                 raise JWTProviderError('Invalid User token')
 
-            if self.backend.get_user(user_uid.decode('base64')):
+            if self.backend.get_user(base64.b64decode(
+                    bytes(user_uid, 'utf8')
+            ).decode('utf-8')):
                 return decoded
 
             raise JWTProviderError('Invalid User token')
