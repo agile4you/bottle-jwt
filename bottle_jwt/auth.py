@@ -12,6 +12,17 @@ import collections
 import jwt
 import datetime
 import logging
+import sys
+
+
+if sys.version_info < (3,):
+    def b(x):
+        return x
+else:
+    import codecs
+
+    def b(x):
+        return codecs.latin_1_encode(x)[0]
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -72,7 +83,7 @@ class JWTProvider(object):
             A valid JWT with expiration signature
         """
         payload = {self.user_field.user_id: base64.b64encode(
-            bytes(user, 'utf8')
+            b(user)
         ).decode("utf-8")}
 
         if self.ttl:
@@ -109,7 +120,7 @@ class JWTProvider(object):
                 raise JWTProviderError('Invalid User token')
 
             if self.backend.get_user(base64.b64decode(
-                    bytes(user_uid, 'utf8')
+                    b(user_uid)
             ).decode('utf-8')):
                 return decoded
 
