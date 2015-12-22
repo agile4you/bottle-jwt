@@ -9,6 +9,10 @@ from bottle_jwt import (JWTProviderPlugin, jwt_auth_required, BaseBackend)
 
 app = bottle.Bottle()
 
+
+server_secret = '*Y*^%JHg7623'
+
+
 class FakeBackend(BaseBackend):
     def __init__(self, data):
         self._repo = data
@@ -31,10 +35,15 @@ class FakeBackend(BaseBackend):
 
 backend = FakeBackend({"pav": "123", "ama": "123", "max": '456'})
 
-app.install(JWTProviderPlugin(
-    'jwt', auth_endpoint='/oauth', backend=backend,
-    fields=('username', 'password'), secret='!@#'
-))
+provider_plugin = JWTProviderPlugin(
+    keyword='jwt',
+    auth_endpoint='/oauth',
+    backend=backend,
+    fields=('username', 'password'),
+    secret=server_secret
+)
+
+app.install(provider_plugin)
 
 
 @app.get('/')

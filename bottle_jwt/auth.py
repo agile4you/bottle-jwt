@@ -181,14 +181,18 @@ class JWTProviderPlugin(object):
     Attributes:
         keyword (str): The string keyword for application registry.
         provider (instance): A JWTProvider instance.
-        auth_endpoint (str): The authentication uri for provider.
+        login_enable (bool): If True app is mounted with a login handler.
+        auth_endpoint (str): The authentication uri for provider if
+                             login_enabled is True.
         kwargs : JWTProvider init parameters.
     """
     scope = ('plugin', 'middleware')
     api = 2
 
-    def __init__(self, keyword, auth_endpoint, scope='plugin', **kwargs):
+    def __init__(self, keyword, auth_endpoint, login_enable=True,
+                 scope='plugin', **kwargs):
         self.keyword = keyword
+        self.login_enable = login_enable
         self.scope = scope
         self.provider = JWTProvider(**kwargs)
         self.auth_endpoint = auth_endpoint
@@ -198,13 +202,16 @@ class JWTProviderPlugin(object):
         keyword argument and check if metadata is available.
         """
 
-        @app.post(self.auth_endpoint)
-        def auth_handler():
-            try:
-                token = self.provider.authenticate(bottle.request)
-                return {"token": token.decode("utf-8")}
-            except JWTProviderError as e:
-                return {"AuthenticationError": list(e.args)}
+        if self.login_enable:
+
+            #  Route a login handler in bottle.py app instance.
+            @app.post(self.auth_endpoint)
+            def auth_handler():
+                try:
+                    token = self.provider.authenticate(bottle.request)
+                    return {"token": token.decode("utf-8")}
+                except JWTProviderError as e:
+                    return {"AuthenticationError": list(e.args)}
 
         for other in app.plugins:
             if not isinstance(other, JWTProviderPlugin):
