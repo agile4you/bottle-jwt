@@ -143,7 +143,7 @@ class JWTProvider(object):
             BackendError, if an auth backend error occurs.
             JWTProviderError,, if user can't be authorized.
         """
-        if request.content_type == 'application/json':  # pragma: no cover
+        if request.content_type.startswith('application/json'):  # pragma: no cover
             user_uid = request.json.get(self.user_field.user_id)
             user_secret = request.json.get(self.user_field.password)
         else:
