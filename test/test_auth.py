@@ -8,7 +8,7 @@ from __future__ import print_function
 import pytest
 import bottle
 from bottle_jwt.auth import (
-    JWTProvider, JWTProviderError, JWTProviderPlugin, jwt_auth_required
+    JWTProvider, JWTProviderError, JWTProviderPlugin, jwt_auth_required, JWTReplier
 )
 
 
@@ -41,6 +41,14 @@ def provider_plugin(backend):
         secret='123',
         ttl=1
     )
+
+
+@pytest.fixture(scope='module')
+def provider_plugin_replier():
+    """Fixture for `bottle_jwt.JWTReplier` class instance.
+    """
+
+    return JWTReplier()
 
 
 def test_provider_authenticate(provider, request):
@@ -131,3 +139,29 @@ def test_provider_plugin_register(provider_plugin):
     app.get('/')(app_handler)
 
     assert len(app.routes) == 2
+
+
+def test_provider_plugin_replies(provider_plugin_replier):
+    """
+    This will test that the stock standard success reply is maintained and works
+    """
+    test_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    result = provider_plugin_replier.auth_succeeded(test_token)
+    assert (isinstance(result, dict))
+    assert (result["token"] == test_token)
+    """
+    This will test that the stock standard failure reply is maintained and works
+    """
+    fake_errors = ["Test"]
+    result = provider_plugin_replier.auth_failed(fake_errors)
+    assert (isinstance(result, dict))
+    assert (result["AuthenticationError"] == fake_errors)
+    """
+    Since the default 401 reply is an abort, let's make sure we catch it
+    """
+    exception_code = None
+    try:
+        provider_plugin_replier.auth_required(fake_errors)
+    except bottle.HTTPError as e:
+        exception_code = e.status_code
+    assert(exception_code is not None and exception_code == 401)

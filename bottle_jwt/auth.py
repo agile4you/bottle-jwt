@@ -48,6 +48,23 @@ def jwt_auth_required(callable_obj):
     return callable_obj
 
 
+class JWTReplier(object):
+    """Base Class for generating a reply from the Auth provider.
+    """
+
+    """This Method will take the success token and generate the JSON Result(if applicable)."""
+    def auth_succeeded(self, token_string):
+        return {"token": token_string}
+
+    """This Method will take the failure reason and generate the JSON Result(if applicable)."""
+    def auth_failed(self, arguments):
+        return {"AuthenticationError": arguments}
+
+    """This Method will take the explanation and generate the JSON Result (if applicable)."""
+    def auth_required(self, arguments):
+        bottle.abort(401, arguments)
+
+
 class JWTProviderError(Exception):
     """Base module exception.
     """
@@ -190,12 +207,13 @@ class JWTProviderPlugin(object):
     api = 2
 
     def __init__(self, keyword, auth_endpoint, login_enable=True,
-                 scope='plugin', **kwargs):
+                 scope='plugin', replier=JWTReplier(), **kwargs):
         self.keyword = keyword
         self.login_enable = login_enable
         self.scope = scope
         self.provider = JWTProvider(**kwargs)
         self.auth_endpoint = auth_endpoint
+        self.replier = replier
 
     def setup(self, app):  # pragma: no cover
         """Make sure that other installed plugins don't affect the same
@@ -209,9 +227,9 @@ class JWTProviderPlugin(object):
             def auth_handler():
                 try:
                     token = self.provider.authenticate(bottle.request)
-                    return {"token": token.decode("utf-8")}
+                    return self.replier.auth_succeeded(token.decode("utf-8"))
                 except JWTProviderError as e:
-                    return {"AuthenticationError": list(e.args)}
+                    return self.replier.auth_failed(e.args)
 
         for other in app.plugins:
             if not isinstance(other, JWTProviderPlugin):
@@ -229,7 +247,7 @@ class JWTProviderPlugin(object):
                 self.provider.authorize(bottle.request)
                 return callback(*args, **kwargs)
             except JWTProviderError as e:
-                bottle.abort(401, e.args)
+                return self.replier.auth_required(e.args)
 
         if self.scope == 'middleware':
             logger.debug("JWT Authentication: {}".format(context.rule))
