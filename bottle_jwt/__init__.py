@@ -24,8 +24,8 @@ __author__ = 'Papavassiliou Vassilis'
 __date__ = '2015-12-10'
 __version__ = '0.0.1'
 __all__ = ['JWTProviderPlugin', 'JWTProvider', 'JWTProviderError',
-           'BaseBackend', 'BackendError', 'FileSystemBackend']
+           'BaseBackend', 'BackendError', 'FileSystemBackend', 'JWTReplier']
 
 from .backends import (BaseBackend, FileSystemBackend, BackendError)
 from .auth import (JWTProviderError, JWTProvider, JWTProviderPlugin,
-                   jwt_auth_required)
+                   jwt_auth_required, JWTReplier)
