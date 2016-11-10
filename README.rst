@@ -15,19 +15,34 @@
     from bottle_jwt import JWTProviderPlugin, BaseBackend, jwt_auth_required
 
     class FakeBackend(BaseBackend):
-        """Implement a fake Auth backend"""
         def __init__(self, data):
-            self.repo = data
+            self._repo = data
 
-        def get_user(self, user_uid, user_secret):
-            """Auth backends must implement `get_user` method with this
+        def authenticate_user(self, user_uid, user_secret):
+            """Auth backends must implement `authenticate_user` method with this
             signature(user_uid, user_secret).
             """
-            if self.repo.get(user_uid) == user_secret:
-                return {"user": self.repo[user_uid]}
+            if self._repo.get(user_uid) == user_secret:
+                return user_uid
             return None
 
-    backend = FakeBackend({"user1": "123", "user2": "345"})
+        def get_user(self, user_uid):
+            """Auth backends must implement `get_user` method with this
+            signature(user_uid).
+            """
+
+            return self._repo.get(user_uid)
+
+
+    backend = FakeBackend({
+                           "user1": "123", 
+                           "user2":"345"
+                           }, 
+                          {
+                          "user1": {"name":"User number 1"}, 
+                          "user2": {"name":"User number 2"}
+                          }
+                          )
 
     server_secret = '@#$!@&^%&@^$&'
 
