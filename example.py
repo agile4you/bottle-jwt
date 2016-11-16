@@ -54,7 +54,7 @@ class FakeBackend(BaseBackend):
         return self.attrrepo.get(user_uid) or {"name":"unknown"}
 
 
-backend = FakeBackend({"pav": "123", "ama": "123", "max": '456'})
+backend = FakeBackend({"user1": "123", "user2":"345"}, {"user1": {"name":"User number 1"}, "user2": {"name":"User number 2"}})
 
 provider_plugin = JWTProviderPlugin(
     keyword='jwt',
