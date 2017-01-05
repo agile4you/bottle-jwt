@@ -34,6 +34,7 @@ from bottle_jwt.error import (JWTError, JWTBackendError, JWTAuthError,
 
 import logging
 
+
 try:  # Python 2.7+
     from logging import NullHandler
 
