@@ -8,8 +8,16 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import abc
-from inspect import signature
+import inspect
 import six
+import sys
+
+
+if sys.version_info < (3,):
+    signature = inspect.getargspec
+
+else:
+    signature = inspect.signature
 
 __all__ = ['BaseAuthBackend', ]
 
