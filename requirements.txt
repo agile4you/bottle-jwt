@@ -1,7 +1,7 @@
 bottle
 requests
 six
-PyJWT#egg=jwt
+PyJWT
 pytest
 coverage
 coveralls
