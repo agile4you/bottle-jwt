@@ -45,7 +45,7 @@ provider_plugin = JWTProviderPlugin(
     backend=AuthBackend(),
     fields=('username', 'password'),
     secret=server_secret,
-    ttl=30
+    ttl=1
 )
 
 app.install(provider_plugin)
@@ -57,4 +57,5 @@ def private_resource():
     return {"scope": "For your eyes only!", "user": bottle.request.get_user()}
 
 
-bottle.run(app=app, port=9092, host='0.0.0.0', reloader=True)
+bottle.debug(True)
+bottle.run(app=app, port=9092, server='cherrypy', host='0.0.0.0', reloader=True)

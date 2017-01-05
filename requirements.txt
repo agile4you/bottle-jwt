@@ -1,6 +1,4 @@
 bottle
-requests
-six
 PyJWT
 pytest
 coverage

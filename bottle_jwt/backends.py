@@ -8,31 +8,13 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import abc
-import inspect
-import six
-import sys
-
-
-if sys.version_info < (3,):
-
-    from collections import namedtuple
-
-    parameters = namedtuple('Parameters', 'parameters')
-
-    def signature(callable_object):
-        params = inspect.getargspec(callable_object).args
-
-        return parameters(parameters=[param for param in params if param != 'self'])
-
-else:
-    signature = inspect.signature
+from inspect import signature
 
 
 __all__ = ['BaseAuthBackend', ]
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseAuthBackend(object):
+class BaseAuthBackend(object, metaclass=abc.ABCMeta):
     """Auth Provider Backend Interface. Defines a standard API for implementation
     in order to work with different backends (SQL, Redis, Filesystem-based, external
     API services, etc.)

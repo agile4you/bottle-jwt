@@ -11,11 +11,11 @@ import base64
 import bottle
 import collections
 import jwt
-import json
 import datetime
 import logging
 from bottle_jwt.backends import BaseAuthBackend
 from bottle_jwt.error import JWTBackendError, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
+
 
 try:
     import ujson as json
