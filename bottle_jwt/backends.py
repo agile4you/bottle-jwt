@@ -14,10 +14,19 @@ import sys
 
 
 if sys.version_info < (3,):
-    signature = inspect.getargspec
+
+    from collections import namedtuple
+
+    parameters = namedtuple('Parameters', 'parameters')
+
+    def signature(callable_object):
+        params = inspect.getargspec(callable_object).args
+
+        return parameters(parameters=[param for param in params if param != 'self'])
 
 else:
     signature = inspect.signature
+
 
 __all__ = ['BaseAuthBackend', ]
 
