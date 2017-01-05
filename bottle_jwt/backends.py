@@ -8,33 +8,60 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import abc
-import json
+from inspect import signature
 import six
 
-__all__ = ['BaseBackend', 'FileSystemBackend']
-
-
-class BackendError(Exception):
-    """Raises when a backend error occurs.
-    """
+__all__ = ['BaseAuthBackend', ]
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseBackend(object):
-    """Auth Provider Interface.
-    """
+class BaseAuthBackend(object):
+    """Auth Provider Backend Interface. Defines a standard API for implementation
+    in order to work with different backends (SQL, Redis, Filesystem-based, external
+    API services, etc.)
+
+    Notes:
+        It is not necessary to subclass `BaseAuthBackend` in order to make `bottle-jwt` plugin to
+        work, as long as you implement it's API. For example all the following examples are valid.
+
+    Examples:
+        >>> class DummyExampleBackend(object):
+        ...     credentials = ('admin', 'qwerty')
+        ...     user_id = 1
+        ...
+        ...     def authenticate_user(self, username, password):
+        ...         if (username, password) == self.credentials
+        ...             return {'user': 'admin', 'id': 1}
+        ...         return None
+        ...
+        ...     def get_user(self, user_id):
+        ...         return {'user': 'admin '} if user_id == self.user_id else None
+        ...
+        >>> class SQLAlchemyExampleBackend(object):
+        ...     def __init__(self, some_orm_model):
+        ...         self.orm_model = some_orm_model
+        ...
+        ...     def authenticate(self, user_uid, user_password):
+        ...         return self.orm_model.get(email=user_uid, password=user_password) or None
+        ...
+        ...     def get_user(self, user_uid):
+        ...         return self.orm_model.get(id=user_uid) or None
+        """
 
     @abc.abstractmethod
-    def authenticate_user(self, user_uid, user_secret):  # pragma: no cover
+    def authenticate_user(self, username, password):  # pragma: no cover
         """User authentication method. All subclasses must implement the
         `authenticate_user` method with the following specs.
 
         Args:
-            user_uid (str): User identity for the backend (email/username).
-            user_secret: User secret (password) for backend.
+            username (str): User identity for the backend (email/username).
+            password (str): User secret password.
 
         Returns:
-            User id if authentication is succesful or None
+            A dict representing User record if authentication is succesful else None.
+
+        Raises:
+            `bottle_jwt.error.JWTBackendError` if any exception occurs.
         """
         pass
 
@@ -44,63 +71,30 @@ class BaseBackend(object):
         `get_user` method with the following specs.
 
         Args:
-            user_uid (str): User identity in backend.
+            user_uid (object): User identity in backend.
 
         Returns:
             User data (dict) if user exists or None.
+
+        Raises:
+            `bottle_jwt.error.JWTBackendError` if any exception occurs.
         """
         pass
 
-
-class FileSystemBackend(BaseBackend):
-    """A JSON file-system backend system (useful for development only).
-    Reads a json file that conforms to the following api:
-
-    {"users": [
-        {
-            "user_id": "<user_id>",
-            "password": "<password>",
-            "attr1": value1,
-            ...
-            ...
-        }
-    ]
-    }
-
-    """
-
-    def __init__(self, storage=''):
-        self.storage = storage
-        self._data = None
-
-    @property
-    def data(self):
-        if not self._data:
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        """Useful for checking interface for backends that don't inherit from
+        BaseAuthBackend.
+        """
+        if cls is BaseAuthBackend:
             try:
-                with open(self.storage, 'r') as db_storage:
-                    data = db_storage.read()
-                self._data = json.loads(data).get('users')
+                authenticate_user_signature = set(signature(subclass.authenticate_user).parameters)
+                get_user_signature = set(signature(subclass.get_user).parameters)
 
-            except IOError as e:
-                raise BackendError(e.args)
-        return self._data
+                return authenticate_user_signature.issuperset({'username', 'password'}) and \
+                    get_user_signature.issuperset({'user_id'})
 
-    def authenticate_user(self, user_uid, user_secret):
-        """Implement `BaseBackend.authenticate_user` method.
-        """
+            except AttributeError:
+                return False
 
-        try:
-            return [user for user in self.data
-                    if user['user_id'] == user_uid and
-                    user['password'] == user_secret].pop()
-
-        except IndexError:
-            return None
-
-    def get_user(self, user_uid):
-        """Implement `BaseBackend.get_user` method.
-        """
-        user = [user for user in self.data if user['user_id'] == user_uid]
-        if user:
-            return user.pop()
-        return None
+        return NotImplemented  # pragma: no cover

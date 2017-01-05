@@ -1,8 +1,0 @@
-{"users": [
-  {"user_id": "pav", "password": "123", "age": 28, "job": "developer"},
-  {"user_id": "ama", "password": "123", "age": 30, "job": "developer"},
-  {"user_id": "max", "password": "123", "age": 28, "job": "developer"},
-  {"user_id": "ath", "password": "123", "age": 34, "job": "dba"},
-  {"user_id": "kal", "password": "123", "age": 30, "job": "designer"}
-]
-}

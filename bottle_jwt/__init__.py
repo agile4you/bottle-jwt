@@ -21,11 +21,25 @@ JSON Web Token Authentication plugin for bottle.py apps.
 """
 
 __author__ = 'Papavassiliou Vassilis'
-__date__ = '2015-12-10'
-__version__ = '0.0.1'
-__all__ = ['JWTProviderPlugin', 'JWTProvider', 'JWTProviderError',
-           'BaseBackend', 'BackendError', 'FileSystemBackend', 'JWTReplier']
+__date__ = '2017-1-5'
+__version__ = '0.2'
+__all__ = ['JWTProviderPlugin', 'JWTProvider', 'jwt_auth_required'
+           'BaseAuthBackend', 'JWTError', 'JWTBackendError', 'JWTAuthError',
+           'JWTForbiddenError', 'JWTUnauthorizedError']
 
-from .backends import (BaseBackend, FileSystemBackend, BackendError)
-from .auth import (JWTProviderError, JWTProvider, JWTProviderPlugin,
-                   jwt_auth_required, JWTReplier)
+from bottle_jwt.auth import (JWTProvider, JWTProviderPlugin, jwt_auth_required)
+from bottle_jwt.backends import BaseAuthBackend
+from bottle_jwt.error import (JWTError, JWTBackendError, JWTAuthError,
+                              JWTForbiddenError, JWTUnauthorizedError)
+
+import logging
+
+try:  # Python 2.7+
+    from logging import NullHandler
+
+except ImportError:  # pragma: no cover
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+logging.getLogger(__name__).addHandler(NullHandler())

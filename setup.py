@@ -1,9 +1,11 @@
 from distutils.core import setup
+from bottle_jwt import __version__ as version
+
 
 setup(
     name='bottle-jwt',
-    version='0.0.1',
-    packages=['test', 'bottle_jwt'],
+    version=version,
+    packages=['bottle_jwt'],
     url='',
     license='GLPv3',
     author='Papavassiliou Vassilis',

@@ -5,63 +5,47 @@
 from __future__ import unicode_literals
 
 import bottle
-from bottle_jwt import (JWTProviderPlugin, jwt_auth_required, BaseBackend)
+from bottle_jwt import (JWTProviderPlugin, jwt_auth_required)
+
 
 app = bottle.Bottle()
 
 server_secret = '*Y*^%JHg7623'
 
-class FakeBackend(BaseBackend):
-    """Implement a fake Auth backend"""
 
+class AuthBackend(object):
+    """Implementing an auth backend class with at least two methods.
+    """
+    user = {'id': 1237832, 'username': 'pav', 'password': '123', 'data': {'sex': 'male', 'active': True}}
 
-    def __init__(self, authdata, attrdata):
-        self.authrepo = authdata
-        self.attrrepo = attrdata
-
-
-    def authenticate_user(self, user_uid, user_secret):
-        """
-        User authentication method. All subclasses must implement the
-        `authenticate_user` method with the following specs.
-
-        Args:
-            user_uid (str): User identity for the backend (email/username).
-            user_secret: User secret (password) for backend.
+    def authenticate_user(self, username, password):
+        """Authenticate User by username and password.
 
         Returns:
-            User id if authentication is succesful or None
+            A dict representing User Record or None.
         """
-        # Yes, it is stupid, but otherwise you could authenticate with no password and a usename that doesnt exist...
-        if user_uid is None or user_secret is None:
-            return None
-        if self.authrepo.get(user_uid) == user_secret:
-            return self.authrepo[user_uid]
+        if username == self.user['username'] and password == self.user['password']:
+            return self.user
+        return None
+
+    def get_user(self, user_id):
+        """Retrieve User By ID.
+
+        Returns:
+            A dict representing User Record or None.
+        """
+        if user_id == self.user['id']:
+            return {k: self.user[k] for k in self.user if k != 'password'}
         return None
 
 
-    def get_user(self, user_uid):
-        """
-        User data retrieval method. All subclasses must implement the
-        `get_user` method with the following specs.
-
-        Args:
-            user_uid (str): User identity in backend.
-
-        Returns:
-            User data (dict) if user exists or None.
-        """
-        return self.attrrepo.get(user_uid) or {"name":"unknown"}
-
-
-backend = FakeBackend({"user1": "123", "user2":"345"}, {"user1": {"name":"User number 1"}, "user2": {"name":"User number 2"}})
-
 provider_plugin = JWTProviderPlugin(
     keyword='jwt',
-    auth_endpoint='/oauth',
-    backend=backend,
+    auth_endpoint='/auth',
+    backend=AuthBackend(),
     fields=('username', 'password'),
-    secret=server_secret
+    secret=server_secret,
+    ttl=30
 )
 
 app.install(provider_plugin)
@@ -70,7 +54,7 @@ app.install(provider_plugin)
 @app.get('/')
 @jwt_auth_required
 def private_resource():
-    return {"scope": "For your eyes only!"}
+    return {"scope": "For your eyes only!", "user": bottle.request.get_user()}
 
 
 bottle.run(app=app, port=9092, host='0.0.0.0', reloader=True)
