@@ -3,7 +3,6 @@
 """
 
 from __future__ import unicode_literals
-
 import bottle
 from bottle_jwt import (JWTProviderPlugin, jwt_auth_required)
 
@@ -45,7 +44,7 @@ provider_plugin = JWTProviderPlugin(
     backend=AuthBackend(),
     fields=('username', 'password'),
     secret=server_secret,
-    ttl=1
+    ttl=30
 )
 
 app.install(provider_plugin)
@@ -53,9 +52,9 @@ app.install(provider_plugin)
 
 @app.get('/')
 @jwt_auth_required
-def private_resource():
+def private_resource(jwt):
+    print(jwt)
     return {"scope": "For your eyes only!", "user": bottle.request.get_user()}
 
 
-bottle.debug(True)
-bottle.run(app=app, port=9092, server='cherrypy', host='0.0.0.0', reloader=True)
+bottle.run(app=app, port=9092, host='0.0.0.0', reloader=True)

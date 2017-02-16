@@ -13,6 +13,7 @@ import collections
 import jwt
 import datetime
 import logging
+import inspect
 from bottle_jwt.backends import BaseAuthBackend
 from bottle_jwt.error import JWTBackendError, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
 
@@ -236,11 +237,19 @@ class JWTProviderPlugin(object):
     def apply(self, callback, context):  # pragma: no cover
         """Implement bottle.py API version 2 `apply` method.
         """
+
+        signature = inspect.signature(callback).parameters
+
+        def injected(*args, **kwargs):
+            if self.keyword in signature:
+                kwargs[self.keyword] = self.provider
+            return callback(*args, **kwargs)
+
         def wrapper(*args, **kwargs):
             try:
                 user = self.provider.authorize(bottle.request)
                 setattr(bottle.request, 'get_user', lambda _: user)
-                return callback(*args, **kwargs)
+                return injected(*args, **kwargs)
 
             except JWTUnauthorizedError as error:
                 bottle.response.content_type = 'application/json'
@@ -262,7 +271,7 @@ class JWTProviderPlugin(object):
             return wrapper
 
         if not hasattr(callback, 'auth_required'):
-            return callback
+            return injected
 
         logger.debug("JWT Authentication: {}".format(context.rule))
         return wrapper
