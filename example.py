@@ -57,4 +57,6 @@ def private_resource(jwt):
     return {"scope": "For your eyes only!", "user": bottle.request.get_user()}
 
 
+bottle.debug(True)
 bottle.run(app=app, port=9092, host='0.0.0.0', reloader=True)
+
