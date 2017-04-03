@@ -58,5 +58,6 @@ def private_resource(jwt):
 
 
 bottle.debug(True)
-bottle.run(app=app, port=9092, host='0.0.0.0', reloader=True)
+bottle.run(
+    app=app, port=9092, host='0.0.0.0', reloader=True)
 

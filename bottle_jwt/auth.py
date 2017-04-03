@@ -13,9 +13,10 @@ import collections
 import jwt
 import datetime
 import logging
-import inspect
+from bottle_jwt.compat import signature
 from bottle_jwt.backends import BaseAuthBackend
 from bottle_jwt.error import JWTBackendError, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
+from bottle_jwt.compat import b
 
 
 try:
@@ -238,10 +239,10 @@ class JWTProviderPlugin(object):
         """Implement bottle.py API version 2 `apply` method.
         """
 
-        signature = inspect.signature(callback).parameters
+        _signature = signature(callback).parameters
 
         def injected(*args, **kwargs):
-            if self.keyword in signature:
+            if self.keyword in _signature:
                 kwargs[self.keyword] = self.provider
             return callback(*args, **kwargs)
 
@@ -252,18 +253,18 @@ class JWTProviderPlugin(object):
                 return injected(*args, **kwargs)
 
             except JWTUnauthorizedError as error:
-                bottle.response.content_type = 'application/json'
-                bottle.response._status_line = '401 Unauthorized'
+                bottle.response.content_type = b('application/json')
+                bottle.response._status_line = b('401 Unauthorized')
                 return {"AuthError": error.args}
 
             except JWTForbiddenError as error:
-                bottle.response.content_type = 'application/json'
-                bottle.response._status_line = '403 Forbidden'
+                bottle.response.content_type = b('application/json')
+                bottle.response._status_line = b('403 Forbidden')
                 return {"AuthError": error.args}
 
             except JWTBackendError:
-                bottle.response.content_type = 'application/json'
-                bottle.response._status_line = '503 Service Unavailable'
+                bottle.response.content_type = b('application/json')
+                bottle.response._status_line = b('503 Service Unavailable')
                 return {"AuthBackendException": "Try later or contact admin!"}
 
         if self.scope == 'middleware':

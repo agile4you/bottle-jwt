@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import pytest
 from bottle_jwt import BaseAuthBackend, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
+from bottle_jwt.compat import b
 import time
 
 
@@ -108,7 +109,7 @@ def test_auth_plugin_authentication_pass(bottle_app):
 
     resource = bottle_app.get(
         '/',
-        extra_environ=dict(HTTP_AUTHORIZATION='JWT {}'.format(login['token']))
+        extra_environ=dict(HTTP_AUTHORIZATION=b('JWT {}'.format(login['token'])))
     )
 
     assert resource.json
@@ -133,7 +134,7 @@ def test_auth_plugin_authentication_fail(bottle_app):
     response = bottle_app.get(
         '/',
         expect_errors=True,
-        extra_environ=dict(HTTP_AUTHORIZATION='JWT {}'.format(login['token']))
+        extra_environ=dict(HTTP_AUTHORIZATION=b('JWT {}'.format(login['token'])))
     )
 
     assert response.status == '401 Unauthorized'
