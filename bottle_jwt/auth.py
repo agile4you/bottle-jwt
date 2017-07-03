@@ -86,7 +86,7 @@ class JWTProvider(object):
         """
         user_id = json.dumps(user.get(self.id_field)).encode('utf-8')
 
-        payload = {'user_id': base64.b64encode(bytes(user_id)).decode("utf-8")}
+        payload = {'sub': base64.b64encode(bytes(user_id)).decode("utf-8")}
 
         if self.ttl:
             payload['exp'] = self.expires
@@ -120,7 +120,7 @@ class JWTProvider(object):
 
             logger.debug("Token validation passed: {}".format(token))
 
-            user_uid = decoded.get('user_id')
+            user_uid = decoded.get('sub')
 
             if not user_uid:  # pragma: no cover
                 raise JWTUnauthorizedError('Invalid User token')
