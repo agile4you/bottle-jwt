@@ -44,7 +44,7 @@ class BaseAuthBackend(object):
         ...     def authenticate(self, user_uid, user_password):
         ...         return self.orm_model.get(email=user_uid, password=user_password) or None
         ...
-        ...     def get_user(self, user_uid):
+        ...     def get_user(self, user_id):
         ...         return self.orm_model.get(id=user_uid) or None
         """
 
@@ -66,12 +66,12 @@ class BaseAuthBackend(object):
         pass
 
     @abc.abstractmethod
-    def get_user(self, user_uid):  # pragma: no cover
+    def get_user(self, user_id):  # pragma: no cover
         """User data retrieval method. All subclasses must implement the
         `get_user` method with the following specs.
 
         Args:
-            user_uid (object): User identity in backend.
+            user_id (object): User identity in backend.
 
         Returns:
             User data (dict) if user exists or None.
