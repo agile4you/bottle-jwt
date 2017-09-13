@@ -12,7 +12,6 @@ app = bottle.Bottle()
 server_secret = '*Y*^%JHg7623'
 
 
-
 class AuthBackend(object):
     """Implementing an auth backend class with at least two methods.
     """
