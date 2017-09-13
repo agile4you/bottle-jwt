@@ -41,11 +41,12 @@ class BaseAuthBackend(object):
         ...     def __init__(self, some_orm_model):
         ...         self.orm_model = some_orm_model
         ...
-        ...     def authenticate(self, user_uid, user_password):
-        ...         return self.orm_model.get(email=user_uid, password=user_password) or None
+        ...     def authenticate(self, username, password):
+        ...         return self.orm_model.get(email=username, password=password) or None
         ...
         ...     def get_user(self, user_id):
         ...         return self.orm_model.get(id=user_uid) or None
+        ...
         """
 
     @abc.abstractmethod
