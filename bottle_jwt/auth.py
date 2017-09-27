@@ -75,11 +75,12 @@ class JWTProvider(object):
             seconds=self.ttl
         )
 
-    def create_token(self, user):
+    def create_token(self, user, ttl=None):
         """Creates a new signed JWT-valid token.
 
         Args:
             user (dict): The user record in key/value mapping from instance backend.
+            ttl (int): Optional time to live value.
 
         Returns:
             A valid JWT with expiration signature
@@ -89,7 +90,12 @@ class JWTProvider(object):
         payload = {'sub': base64.b64encode(bytes(user_id)).decode("utf-8")}
 
         if self.ttl:
-            payload['exp'] = self.expires
+            # you can override instance default ttl in special cases.
+            if ttl:
+                payload = datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl)
+
+            else:
+                payload['exp'] = self.expires
 
         logger.debug("Token created for payload: {}".format(str(payload)))
 
