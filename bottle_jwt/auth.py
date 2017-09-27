@@ -92,7 +92,7 @@ class JWTProvider(object):
         if self.ttl:
             # you can override instance default ttl in special cases.
             if ttl:
-                payload = datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl)
+                payload['exp'] = datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl)
 
             else:
                 payload['exp'] = self.expires
