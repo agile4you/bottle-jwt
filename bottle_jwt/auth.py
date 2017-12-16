@@ -99,7 +99,7 @@ class JWTProvider(object):
 
         logger.debug("Token created for payload: {}".format(str(payload)))
 
-        return jwt.encode(payload, self.secret, algorithm=self.algorithm)
+        return jwt.encode(payload, self.secret, algorithm=self.algorithm), payload['exp']
 
     def validate_token(self, token=''):
         """Validate JWT token.
@@ -223,8 +223,8 @@ class JWTProviderPlugin(object):
             @app.post(self.auth_endpoint)
             def auth_handler():
                 try:
-                    token = self.provider.authenticate(bottle.request)
-                    return {"token": token.decode("utf-8")}
+                    token, expires = self.provider.authenticate(bottle.request)
+                    return {"token": token.decode("utf-8"), expires: str(expires)}
 
                 except JWTAuthError as error:
                     return {"AuthError": error.args[0]}

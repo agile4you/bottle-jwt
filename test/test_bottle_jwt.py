@@ -51,7 +51,7 @@ def test_provider_authorize_pass(jwt_provider, request):
     """
     req = request({'username': 'pav', 'password': '123'})
 
-    token = jwt_provider.authenticate(req)
+    token, _ = jwt_provider.authenticate(req)
 
     req.set_header('Authorization', 'JWT {}'.format(token.decode("utf-8")))
 
@@ -63,7 +63,7 @@ def test_provider_authorize_fail(jwt_provider, request):
     """
     req = request({'username': 'pav', 'password': '123'})
 
-    token = jwt_provider.authenticate(req)
+    token, _ = jwt_provider.authenticate(req)
 
     # test for invalid token
     req.set_header('Authorization', 'JWT {}'.format(token[:-1].decode("utf-8")))

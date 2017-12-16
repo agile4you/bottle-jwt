@@ -22,7 +22,7 @@ JSON Web Token Authentication plugin for bottle.py apps.
 
 __author__ = 'Papavassiliou Vassilis'
 __date__ = '2017-1-5'
-__version__ = '0.9'
+__version__ = '0.10'
 __all__ = ['JWTProviderPlugin', 'JWTProvider', 'jwt_auth_required',
            'BaseAuthBackend', 'JWTError', 'JWTBackendError', 'JWTAuthError',
            'JWTForbiddenError', 'JWTUnauthorizedError']
