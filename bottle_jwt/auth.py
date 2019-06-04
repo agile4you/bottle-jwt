@@ -224,7 +224,7 @@ class JWTProviderPlugin(object):
             def auth_handler():
                 try:
                     token, expires = self.provider.authenticate(bottle.request)
-                    return {"token": token.decode("utf-8"), expires: str(expires)}
+                    return {"token": token.decode("utf-8"), "expires": str(expires)}
 
                 except JWTAuthError as error:
                     return {"AuthError": error.args[0]}
