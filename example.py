@@ -34,7 +34,7 @@ class AuthBackend(object):
             A dict representing User Record or None.
         """
         if user_id == self.user['id']:
-            return {k: self.user[k] for k in self.user if k != 'password'}
+            return {k: self.user[k] for k in self.user.keys() if k != 'password'}
         return None
 
 
