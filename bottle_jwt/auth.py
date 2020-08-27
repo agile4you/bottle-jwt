@@ -18,7 +18,6 @@ from bottle_jwt.backends import BaseAuthBackend
 from bottle_jwt.error import JWTBackendError, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
 from bottle_jwt.compat import b
 
-
 try:
     import ujson as json
 
@@ -29,9 +28,7 @@ except ImportError:
     except ImportError:
         import json
 
-
 logger = logging.getLogger(__name__)
-
 
 auth_fields = collections.namedtuple('AuthField', 'user_id, password')
 
@@ -52,11 +49,16 @@ def jwt_auth_required(callable_obj):
     return callable_obj
 
 
+def refresh_auth_token(callable_obj):
+    setattr(callable_obj, 'refresh_token', True)
+    return callable_obj
+
+
 class JWTProvider(object):
     """JWT Auth provider concrete class.
     """
 
-    def __init__(self, fields, backend, secret, id_field='id', algorithm='HS256', ttl=None):
+    def __init__(self, fields, backend, secret, id_field='id', algorithm='HS256', ttl=None, refresh_ttl=None):
         if not isinstance(backend, BaseAuthBackend):  # pragma: no cover
             raise TypeError('backend instance does not implement {} interface'.format(BaseAuthBackend))
 
@@ -66,6 +68,7 @@ class JWTProvider(object):
         self.backend = backend
         self.algorithm = algorithm
         self.ttl = ttl
+        self.refresh_ttl = refresh_ttl
 
     @property
     def expires(self):
@@ -74,6 +77,25 @@ class JWTProvider(object):
         return datetime.datetime.utcnow() + datetime.timedelta(
             seconds=self.ttl
         )
+
+    @property
+    def refresh_token_expire(self):
+        """Computes the token expiration time based on `self.ttl` attribute.
+                """
+        return datetime.datetime.utcnow() + datetime.timedelta(
+            seconds=self.refresh_ttl
+        )
+
+    def create_refresh_token(self, user, ttl=None):
+        user_id = json.dumps(user.get(self.id_field)).encode('utf-8')
+        payload = {'sub': base64.b64encode(bytes(user_id)).decode("utf-8")}
+        if self.refresh_ttl:
+            if ttl:
+                payload['exp'] = datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl)
+            else:
+                payload['exp'] = self.refresh_token_expire
+        logger.debug("Token created for payload: {}".format(str(payload)))
+        return jwt.encode(payload, self.secret + self.secret[::-1], algorithm=self.algorithm)
 
     def create_token(self, user, ttl=None):
         """Creates a new signed JWT-valid token.
@@ -98,8 +120,36 @@ class JWTProvider(object):
                 payload['exp'] = self.expires
 
         logger.debug("Token created for payload: {}".format(str(payload)))
+        return jwt.encode(payload, self.secret, algorithm=self.algorithm), self.ttl, self.create_refresh_token(
+            user)
 
-        return jwt.encode(payload, self.secret, algorithm=self.algorithm), payload['exp']
+    def validate_refresh_token(self, token=''):
+        if not token:
+            logger.debug("Forbidden access")
+            raise JWTForbiddenError('Cannot access this resource!')
+
+        try:
+            decoded = jwt.decode(
+                token.split(" ", 1).pop(),
+                self.secret + self.secret[::-1],
+                algorithms=self.algorithm
+            )
+            logger.debug("Token validation passed: {}".format(token))
+
+            user_uid = decoded.get('sub')
+
+            if not user_uid:  # pragma: no cover
+                raise JWTUnauthorizedError('Invalid Refresh token')
+
+            user = self.backend.get_user(json.loads(base64.b64decode(user_uid).decode('utf-8')))
+            if user:
+                return user
+
+            raise JWTUnauthorizedError('Invalid Refresh token')
+
+        except (jwt.DecodeError, jwt.ExpiredSignatureError) as e:
+            logger.debug("{}: {}".format(e.args[0], token))
+            raise JWTUnauthorizedError("Invalid auth Refresh provided.")
 
     def validate_token(self, token=''):
         """Validate JWT token.
@@ -190,6 +240,10 @@ class JWTProvider(object):
         user_token = request.get_header("Authorization", '')
         return self.validate_token(user_token) or False
 
+    def authorize_refresh_token(self, request):
+        user_token = request.get_header("Authorization", '')
+        return self.validate_refresh_token(user_token) or False
+
 
 class JWTProviderPlugin(object):
     """A `bottle.Bottle` application plugin for JWTProvider.
@@ -205,12 +259,13 @@ class JWTProviderPlugin(object):
     scope = ('plugin', 'middleware')
     api = 2
 
-    def __init__(self, keyword, auth_endpoint, login_enable=True, scope='plugin', **kwargs):
+    def __init__(self, keyword, auth_endpoint, refresh_endpoint, login_enable=True, scope='plugin', **kwargs):
         self.keyword = keyword
         self.login_enable = login_enable
         self.scope = scope
         self.provider = JWTProvider(**kwargs)
         self.auth_endpoint = auth_endpoint
+        self.refresh_endpoint = refresh_endpoint
 
     def setup(self, app):  # pragma: no cover
         """Make sure that other installed plugins don't affect the same
@@ -218,13 +273,27 @@ class JWTProviderPlugin(object):
         """
 
         if self.login_enable:
+            @app.post(self.refresh_endpoint)
+            def refresh_auth_handler():
+                try:
+                    user = self.provider.authorize_refresh_token(bottle.request)
+                    if user:
+                        token, expires, refresh_token = self.provider.create_token(user, ttl=60)
+                        return {"token": token.decode("utf-8"), "expires": expires,
+                                "refresh_token": refresh_token.decode("utf-8")}
+                except JWTAuthError as error:
+                    return {"AuthError": error.args[0]}
+
+                except JWTBackendError:
+                    return {"AuthBackendError": "Try later or contact admin!"}
 
             #  Route a login handler in bottle.py app instance.
             @app.post(self.auth_endpoint)
             def auth_handler():
                 try:
-                    token, expires = self.provider.authenticate(bottle.request)
-                    return {"token": token.decode("utf-8"), "expires": str(expires)}
+                    token, expires, refresh_token = self.provider.authenticate(bottle.request)
+                    return {"token": token.decode("utf-8"), "expires": expires,
+                            "refresh_token": refresh_token.decode("utf-8")}
 
                 except JWTAuthError as error:
                     return {"AuthError": error.args[0]}
