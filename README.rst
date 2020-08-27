@@ -49,10 +49,13 @@
     provider_plugin = JWTProviderPlugin(
         keyword='jwt',
         auth_endpoint='/auth',
+        refresh_endpoint='/api/refresh_token',
         backend=AuthBackend(),
         fields=('username', 'password'),
         secret=server_secret,
-        ttl=30
+        ttl=30,
+        refresh_ttl=64000
+
     )
 
     app.install(provider_plugin)
