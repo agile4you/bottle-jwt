@@ -278,7 +278,7 @@ class JWTProviderPlugin(object):
                 try:
                     user = self.provider.authorize_refresh_token(bottle.request)
                     if user:
-                        token, expires, refresh_token = self.provider.create_token(user, ttl=60)
+                        token, expires, refresh_token = self.provider.create_token(user, ttl=self.provider.ttl)
                         return {"token": token.decode("utf-8"), "expires": expires,
                                 "refresh_token": refresh_token.decode("utf-8")}
                 except JWTAuthError as error:
