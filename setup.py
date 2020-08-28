@@ -12,13 +12,13 @@ with open('bottle_jwt/__init__.py', 'rb') as f:
 
 
 setup(
-    name='bottle-jwt',
+    name='bottle-jwt2',
     version=version,
     packages=['bottle_jwt'],
     url='',
     license='GLPv3',
-    author='Papavassiliou Vassilis',
-    author_email='vpapavasil@gmail.com',
+    author='Papavassiliou Vassilis,Amir Lesani',
+    author_email='vpapavasil@gmail.com , xenups@gmail.com',
     description='JWT Auth plugin for bottle.py applications',
     install_requires=['pyjwt']
 )
