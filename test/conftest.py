@@ -5,7 +5,7 @@
 import bottle
 import pytest
 import webtest
-from bottle_jwt import JWTProvider, JWTProviderPlugin, jwt_auth_required
+from bottle_jwt2 import JWTProvider, JWTProviderPlugin, jwt_auth_required
 
 
 @pytest.fixture(scope='session')

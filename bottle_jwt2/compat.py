@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`bottle_jwt.compat` module.
+"""`bottle_jwt2.compat` module.
 
 Provides python 2, 3 compatibility functions.
 """

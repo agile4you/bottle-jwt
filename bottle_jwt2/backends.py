@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`bottle_jwt.auth` module.
+"""`bottle_jwt2.auth` module.
 
 Main auth providers class implementation.
 """
@@ -9,7 +9,7 @@ from __future__ import print_function
 
 import abc
 import six
-from bottle_jwt.compat import signature
+from bottle_jwt2.compat import signature
 
 __all__ = ['BaseAuthBackend', ]
 
@@ -62,7 +62,7 @@ class BaseAuthBackend(object):
             A dict representing User record if authentication is succesful else None.
 
         Raises:
-            `bottle_jwt.error.JWTBackendError` if any exception occurs.
+            `bottle_jwt2.error.JWTBackendError` if any exception occurs.
         """
         pass
 
@@ -78,7 +78,7 @@ class BaseAuthBackend(object):
             User data (dict) if user exists or None.
 
         Raises:
-            `bottle_jwt.error.JWTBackendError` if any exception occurs.
+            `bottle_jwt2.error.JWTBackendError` if any exception occurs.
         """
         pass
 

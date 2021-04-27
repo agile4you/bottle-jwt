@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Unit test suite for `bottle_jwt` plugin.
+"""Unit test suite for `bottle_jwt2` plugin.
 """
 from __future__ import unicode_literals
 from __future__ import print_function
 
 
 import pytest
-from bottle_jwt import BaseAuthBackend, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
-from bottle_jwt.compat import b
+from bottle_jwt2 import BaseAuthBackend, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
+from bottle_jwt2.compat import b
 import time
 
 
@@ -28,7 +28,7 @@ def test_backend_interface_check_fail():
 
 
 def test_provider_authenticate_pass(jwt_provider, request):
-    """Testing `bottle_jwt.auth.JWTProvider.authenticate` method pass.
+    """Testing `bottle_jwt2.auth.JWTProvider.authenticate` method pass.
     """
 
     req = request({'username': 'pav', 'password': '123'})
@@ -37,7 +37,7 @@ def test_provider_authenticate_pass(jwt_provider, request):
 
 
 def test_provider_authenticate_fail(jwt_provider, request):
-    """Testing `bottle_jwt.auth.JWTProvider.authenticate` method fail.
+    """Testing `bottle_jwt2.auth.JWTProvider.authenticate` method fail.
     """
 
     req = request({'username': 'pav', 'password': '1234'})
@@ -47,7 +47,7 @@ def test_provider_authenticate_fail(jwt_provider, request):
 
 
 def test_provider_authorize_pass(jwt_provider, request):
-    """Testing `bottle_jwt.auth.JWTProvider.authorize` method pass.
+    """Testing `bottle_jwt2.auth.JWTProvider.authorize` method pass.
     """
     req = request({'username': 'pav', 'password': '123'})
 
@@ -59,7 +59,7 @@ def test_provider_authorize_pass(jwt_provider, request):
 
 
 def test_provider_authorize_fail(jwt_provider, request):
-    """Testing `bottle_jwt.auth.JWTProvider.authorize` method pass.
+    """Testing `bottle_jwt2.auth.JWTProvider.authorize` method pass.
     """
     req = request({'username': 'pav', 'password': '123'})
 
@@ -84,7 +84,7 @@ def test_provider_authorize_fail(jwt_provider, request):
 
 
 def test_auth_plugin_login_pass(bottle_app):
-    """Test `bottle_jwt.JWTProviderPlugin` login web handler pass.
+    """Test `bottle_jwt2.JWTProviderPlugin` login web handler pass.
     """
 
     data = bottle_app.post_json('/auth', {'username': 'pav', 'password': '123'})
@@ -93,7 +93,7 @@ def test_auth_plugin_login_pass(bottle_app):
 
 
 def test_auth_plugin_login_fail(bottle_app):
-    """Test `bottle_jwt.JWTProviderPlugin` login web handler fail.
+    """Test `bottle_jwt2.JWTProviderPlugin` login web handler fail.
     """
 
     data = bottle_app.post_json('/auth', {'username': 'pav', 'password': '12'})
@@ -102,7 +102,7 @@ def test_auth_plugin_login_fail(bottle_app):
 
 
 def test_auth_plugin_authentication_pass(bottle_app):
-    """Test `bottle_jwt.JWTProviderPlugin` authentication pass.
+    """Test `bottle_jwt2.JWTProviderPlugin` authentication pass.
     """
 
     login = bottle_app.post_json('/auth', {'username': 'pav', 'password': '123'}).json
@@ -116,7 +116,7 @@ def test_auth_plugin_authentication_pass(bottle_app):
 
 
 def test_auth_plugin_authentication_fail(bottle_app):
-    """Test `bottle_jwt.JWTProviderPlugin` authentication pass.
+    """Test `bottle_jwt2.JWTProviderPlugin` authentication pass.
     """
 
     login = bottle_app.post_json('/auth', {'username': 'pav', 'password': '123'}).json
