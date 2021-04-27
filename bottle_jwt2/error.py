@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`bottle_jwt.error` module.
+"""`bottle_jwt2.error` module.
 
 Provides package Exception hierarchy.
 """

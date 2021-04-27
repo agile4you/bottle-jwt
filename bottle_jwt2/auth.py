@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`bottle_jwt.auth` module.
+"""`bottle_jwt2.auth` module.
 
 Main auth providers class implementation.
 """
@@ -13,10 +13,10 @@ import collections
 import jwt
 import datetime
 import logging
-from bottle_jwt.compat import signature
-from bottle_jwt.backends import BaseAuthBackend
-from bottle_jwt.error import JWTBackendError, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
-from bottle_jwt.compat import b
+from bottle_jwt2.compat import signature
+from bottle_jwt2.backends import BaseAuthBackend
+from bottle_jwt2.error import JWTBackendError, JWTAuthError, JWTForbiddenError, JWTUnauthorizedError
+from bottle_jwt2.compat import b
 
 try:
     import ujson as json

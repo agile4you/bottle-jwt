@@ -4,7 +4,7 @@
 
 from __future__ import unicode_literals
 import bottle
-from bottle_jwt import (JWTProviderPlugin, jwt_auth_required)
+from bottle_jwt2 import (JWTProviderPlugin, jwt_auth_required)
 
 
 app = bottle.Bottle()
