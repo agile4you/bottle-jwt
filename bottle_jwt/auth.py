@@ -279,8 +279,8 @@ class JWTProviderPlugin(object):
                     user = self.provider.authorize_refresh_token(bottle.request)
                     if user:
                         token, expires, refresh_token = self.provider.create_token(user, ttl=self.provider.ttl)
-                        return {"token": token.decode("utf-8"), "expires": expires,
-                                "refresh_token": refresh_token.decode("utf-8")}
+                        return {"token": token, "expires": expires,
+                                "refresh_token": refresh_token}
                 except JWTAuthError as error:
                     return {"AuthError": error.args[0]}
 
@@ -292,8 +292,8 @@ class JWTProviderPlugin(object):
             def auth_handler():
                 try:
                     token, expires, refresh_token = self.provider.authenticate(bottle.request)
-                    return {"token": token.decode("utf-8"), "expires": expires,
-                            "refresh_token": refresh_token.decode("utf-8")}
+                    return {"token": token, "expires": expires,
+                            "refresh_token": refresh_token}
 
                 except JWTAuthError as error:
                     return {"AuthError": error.args[0]}
